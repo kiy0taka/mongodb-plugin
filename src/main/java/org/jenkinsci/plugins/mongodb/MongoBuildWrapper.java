@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.mongodb;
 
+import static org.apache.commons.lang.StringUtils.isEmpty;
 import hudson.CopyOnWrite;
 import hudson.Extension;
 import hudson.FilePath;
@@ -79,18 +80,14 @@ public class MongoBuildWrapper extends BuildWrapper {
             .forNode(Computer.currentComputer().getNode(), listener)
             .forEnvironment(build.getEnvironment(listener));
 
-        final File dbpathFile = new File(dbpath);
+        ArgumentListBuilder args = new ArgumentListBuilder().add(mongo.getExecutable(launcher));
+        final File dbpathFile = setupCmd(args, new File(build.getWorkspace().getName()), build.getRootDir());
+
         new FilePath(dbpathFile).deleteRecursive();
         dbpathFile.mkdirs();
-        ArgumentListBuilder args = new ArgumentListBuilder()
-            .add(mongo.getExecutable(launcher))
-            .add("--fork")
-            .add("--port", port)
-            .add("--dbpath")
-            .add(new File(dbpath))
-            .add("--logpath")
-            .add(new File(build.getRootDir(), "mongodb.log"));
+
         launcher.launch().cmds(args).join();
+
         return new BuildWrapper.Environment() {
             @Override
             public boolean tearDown(AbstractBuild build, BuildListener listener)
@@ -105,6 +102,28 @@ public class MongoBuildWrapper extends BuildWrapper {
                 return super.tearDown(build, listener);
             }
         };
+    }
+
+    protected File setupCmd(ArgumentListBuilder args, File workspace, File buildDir) {
+
+        args.add("--fork").add("--logpath").add(new File(buildDir, "mongodb.log"));
+
+        File dbpathFile;
+        if (isEmpty(dbpath)) {
+            dbpathFile = new File(workspace, "mongodata");
+        } else {
+            dbpathFile = new File(dbpath);
+            if (!dbpathFile.isAbsolute()) {
+                dbpathFile = new File(workspace, dbpath);
+            }
+        }
+        args.add("--dbpath").add(dbpathFile);
+
+        if (StringUtils.isNotEmpty(port)) {
+            args.add("--port", port);
+        }
+
+        return dbpathFile;
     }
 
     @Extension
@@ -149,7 +168,7 @@ public class MongoBuildWrapper extends BuildWrapper {
         }
 
         public static FormValidation doCheckDbpath(@QueryParameter String value) {
-            if (StringUtils.isEmpty(value)) {
+            if (isEmpty(value)) {
                 return FormValidation.ok();
             }
             File file = new File(value);
@@ -162,7 +181,7 @@ public class MongoBuildWrapper extends BuildWrapper {
         }
 
         protected static boolean isPortNumber(String value) {
-            if (StringUtils.isEmpty(value)) {
+            if (isEmpty(value)) {
                 return true;
             }
             if (StringUtils.isNumeric(value)) {
