@@ -8,9 +8,11 @@
     </select>
   </f:entry>
   <f:entry title="Data Directory">
-    <f:textbox name="mongo.dbpath" value="${instance.dbpath}"/>
+    <f:textbox name="mongo.dbpath" value="${instance.dbpath}"
+      checkUrl="'descriptorByName/org.jenkinsci.plugins.mongodb.MongoBuildWrapper/checkDbpath?value='+escape(this.value)"/>
   </f:entry>
   <f:entry title="Port">
-    <f:textbox name="mongo.port" value="${instance.port}"/>
+    <f:textbox name="mongo.port" value="${instance.port}"
+      checkUrl="'descriptorByName/org.jenkinsci.plugins.mongodb.MongoBuildWrapper/checkPort?value='+escape(this.value)"/>
   </f:entry>
 </j:jelly>

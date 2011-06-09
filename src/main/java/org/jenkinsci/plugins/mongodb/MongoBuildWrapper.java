@@ -11,6 +11,7 @@ import hudson.model.Computer;
 import hudson.tasks.BuildWrapper;
 import hudson.tasks.BuildWrapperDescriptor;
 import hudson.util.ArgumentListBuilder;
+import hudson.util.FormValidation;
 import hudson.util.ProcessTree;
 import hudson.util.ProcessTree.OSProcess;
 
@@ -21,6 +22,7 @@ import net.sf.json.JSONObject;
 
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
 public class MongoBuildWrapper extends BuildWrapper {
@@ -140,6 +142,34 @@ public class MongoBuildWrapper extends BuildWrapper {
         public void setInstallations(MongoDBInstallation[] installations) {
             this.installations = installations;
             save();
+        }
+
+        public static FormValidation doCheckPort(@QueryParameter String value) {
+            return isPortNumber(value) ? FormValidation.ok() : FormValidation.error("Invalid port number.");
+        }
+
+        public static FormValidation doCheckDbpath(@QueryParameter String value) {
+            if (StringUtils.isEmpty(value)) {
+                return FormValidation.ok();
+            }
+            File file = new File(value);
+            if (!file.isDirectory()) {
+                return FormValidation.error("Not a directory.");
+            } else if (file.list().length > 0) {
+                return FormValidation.warning("Not a empty directory. Before running job, the data directory is cleaned.");
+            }
+            return FormValidation.ok();
+        }
+
+        protected static boolean isPortNumber(String value) {
+            if (StringUtils.isEmpty(value)) {
+                return true;
+            }
+            if (StringUtils.isNumeric(value)) {
+                int num = Integer.parseInt(value);
+                return num >= 0 && num <= 65535;
+            }
+            return false;
         }
     }
 }

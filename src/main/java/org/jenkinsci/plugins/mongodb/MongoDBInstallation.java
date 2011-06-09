@@ -2,15 +2,12 @@ package org.jenkinsci.plugins.mongodb;
 
 import hudson.EnvVars;
 import hudson.Extension;
-import hudson.FilePath;
-import hudson.FilePath.FileCallable;
 import hudson.Launcher;
 import hudson.model.EnvironmentSpecific;
 import hudson.model.TaskListener;
 import hudson.model.Hudson;
 import hudson.model.Node;
 import hudson.remoting.Callable;
-import hudson.remoting.VirtualChannel;
 import hudson.slaves.NodeSpecific;
 import hudson.tools.ToolDescriptor;
 import hudson.tools.ToolInstaller;
@@ -22,7 +19,6 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.commons.io.FileUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 public class MongoDBInstallation extends ToolInstallation implements EnvironmentSpecific<MongoDBInstallation>, NodeSpecific<MongoDBInstallation> {
